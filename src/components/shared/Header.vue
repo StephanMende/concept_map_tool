@@ -5,15 +5,12 @@
         </b-navbar-brand>
         <!-- <b-navbar-brand to="/login"> Login</b-navbar-brand> -->
         <b-row class="menu-avatar" v-if="validCredential">
-            <b-avatar
-                variant="info"
-                src="https://placekitten.com/300/300"
-            ></b-avatar>
+            <b-avatar variant="info" :src="user.pictureLink"></b-avatar>
             <span>{{ user.name }}</span>
             <b-button
                 class="menu-logoutButton"
                 size="sm"
-                variant="primary"
+                variant="secondary"
                 @click="logout()"
             >
                 <b-icon icon="box-arrow-right"></b-icon>
@@ -49,7 +46,7 @@ export default {
 </script>
 <style scoped>
 .menu {
-    background-color: #3949b3 !important;
+    background-color: #6c757d !important;
     display: flex;
     justify-content: space-between;
     padding: 0.7rem 2rem;
@@ -77,7 +74,6 @@ export default {
 }
 .menu-logoutButton {
     color: white;
-    background-color: #3949b3;
     border: none;
     width: 20%;
 }

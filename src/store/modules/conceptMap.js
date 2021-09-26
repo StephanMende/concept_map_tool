@@ -6,6 +6,7 @@ const state = () => ({
     concept_maps: [], // Stores the concept maps of the user
     index: 0, // the index of concept_maps. We use it for D3-network in ConceptMap.vue
     activeConceptMap: [], // the selected concept map from radio button which are at the top right of the concept map page
+    finishedLoading: false,
 
 
 })
@@ -54,6 +55,10 @@ const getters = {
     getActiveConceptMap(state) {
         return state.activeConceptMap;
     },
+
+    getFinishedLoading(state) {
+        return state.finishedLoading;
+    }
 
 
 }
@@ -374,9 +379,9 @@ const actions = {
     */
     async loadConceptMapFromBackend({ commit, rootState, dispatch }) {
         let conceptMaps = rootState.drupal_api.user.concept_maps;
-        // let index = conceptMaps.length - 1;
-        // commit("UPDATE_INDEX", index);
-        return conceptMaps.forEach(async (conceptMap) => {
+
+        for (const conceptMap of conceptMaps) {
+
             await axios.get(`concept_map/${conceptMap.id}`)
                 .then(async (response) => {
                     const nodes = response.data.data.relationships.field_conceptmap_concepts.data;
@@ -384,12 +389,27 @@ const actions = {
                     let newNodes = await dispatch("loadNodesOfConceptMap", nodes);
                     let newLinks = await dispatch("loadLinksOfConceptMap", links);
                     await dispatch("loadConceptMap", { conceptMapCredientials: response.data.data, nodes: newNodes, links: newLinks });
-                    await commit("INITIALIZE_AKTIVE_CONCEPT_MAP");
                 })
                 .catch(error => {
                     throw new Error(`API ${error}`);
                 });
-        })
+        }
+        await commit("INITIALIZE_AKTIVE_CONCEPT_MAP");
+        console.log("hello")
+        // await conceptMaps.forEach(async (conceptMap) => {
+        //     await axios.get(`concept_map/${conceptMap.id}`)
+        //         .then(async (response) => {
+        //             const nodes = response.data.data.relationships.field_conceptmap_concepts.data;
+        //             const links = response.data.data.relationships.field_conceptmap_relationships.data;
+        //             let newNodes = await dispatch("loadNodesOfConceptMap", nodes);
+        //             let newLinks = await dispatch("loadLinksOfConceptMap", links);
+        //             await dispatch("loadConceptMap", { conceptMapCredientials: response.data.data, nodes: newNodes, links: newLinks });
+        //             await commit("INITIALIZE_AKTIVE_CONCEPT_MAP");
+        //         })
+        //         .catch(error => {
+        //             throw new Error(`API ${error}`);
+        //         });
+        // })
     },
 
     /**
@@ -405,7 +425,6 @@ const actions = {
         await nodes.forEach(element => {
             axios.get(`concept/${element.id}`)
                 .then((response) => {
-                    console.log(response)
                     const title = response.data.data.attributes.title;
                     const uuid = response.data.data.id;
                     const conceptMapId = response.data.data.attributes.field_concept_map_id;
@@ -514,7 +533,7 @@ const mutations = {
         state.concept_maps[state.index].links.push({
             sid: payload.relationship[0].sid,
             tid: payload.relationship[0].tid,
-            _color: '#FFFFFF',
+            _color: 'red',
             name: payload.relationship[0].name,
             marker: payload.relationship[0].marker,
         })
@@ -562,6 +581,8 @@ const mutations = {
         })
 
 
+
+
     },
     /**
     * Initializes the active concept map. 
@@ -569,9 +590,8 @@ const mutations = {
     * @returns state.activeConceptMap
     */
     INITIALIZE_AKTIVE_CONCEPT_MAP(state) {
-
         state.activeConceptMap = state.concept_maps[0];
-        console.log(state.activeConceptMap)
+        state.finishedLoading = true;
         return state.activeConceptMap
     },
     /**
